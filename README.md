@@ -1,15 +1,26 @@
-# DemoSecurity - Démonstration Interactive de la Sécurité Blockchain
+# Démo Sécurité Blockchain
 
-Une application web interactive pour comprendre les concepts de sécurité de la blockchain à travers des simulations visuelles.
+Une application web interactive pour comprendre les concepts de sécurité de la blockchain à travers des simulations visuelles et des démonstrations pratiques.
 
 ## 🚀 Fonctionnalités
 
-- **Simulation d'Attaque Interactive** : Visualisez comment fonctionne une tentative d'attaque sur une blockchain
-- **Personnages Interactifs** : 
-  - Alice (👩 Utilisatrice honnête)
-  - Eve (🦹‍♀️ Attaquante)
-- **Visualisation en Temps Réel** des modifications et de leur détection
-- **Interface Intuitive** pour comprendre les concepts de sécurité
+### 1. Laboratoire de Hachage
+- Génération de hash en temps réel
+- Comparaison entre SHA-256, MD5 et hash faible
+- Démonstration de l'effet d'avalanche
+- Visualisation des différences entre les algorithmes
+
+### 2. Studio Blockchain
+- Création de blocs en temps réel
+- Ajustement de la difficulté de minage
+- Suivi de la consommation d'énergie
+- Visualisation de la chaîne complète
+
+### 3. Simulateur d'Attaque
+- Simulation d'attaques avec Eve (🦹‍♀️) et Alice (👩)
+- Démonstration de la détection des modifications
+- Visualisation du processus de sécurité
+- Interface intuitive et pédagogique
 
 ## 🛠️ Technologies Utilisées
 
@@ -17,18 +28,19 @@ Une application web interactive pour comprendre les concepts de sécurité de la
 - TypeScript
 - Tailwind CSS
 - Framer Motion (pour les animations)
+- Web Crypto API
 - Vite (pour le développement)
 
 ## 📦 Installation
 
 1. Clonez le repository :
 ```bash
-git clone https://github.com/votre-username/DemoSecurity.git
+git clone https://github.com/Ali-Bougassaa/HashFunction.git
 ```
 
 2. Installez les dépendances :
 ```bash
-cd DemoSecurity
+cd HashFunction
 npm install
 ```
 
@@ -39,21 +51,31 @@ npm run dev
 
 L'application sera disponible à l'adresse [http://localhost:5173](http://localhost:5173)
 
-## 🎯 Comment Utiliser
+## 🎯 Guide d'Utilisation
 
-1. **Observez les Transactions** : Visualisez les transactions existantes entre les utilisateurs
-2. **Tentez une Modification** : 
-   - Sélectionnez une transaction
-   - Modifiez le montant
-   - Observez la détection de la fraude
-3. **Suivez le Processus** : Les étapes sont clairement indiquées dans l'interface
+### Laboratoire de Hachage
+1. Entrez du texte dans le champ
+2. Observez les différents hashs générés
+3. Testez l'effet d'avalanche
+
+### Studio Blockchain
+1. Ajustez la difficulté de minage
+2. Ajoutez des données pour créer un bloc
+3. Observez le processus de minage et la consommation d'énergie
+
+### Simulateur d'Attaque
+1. Sélectionnez une transaction
+2. Tentez une modification avec Eve
+3. Observez la détection et la protection
 
 ## 🔒 Concepts de Sécurité Démontrés
 
-- Hachage des transactions
+- Hachage cryptographique
+- Preuve de travail (PoW)
 - Intégrité de la chaîne
 - Détection des modifications
-- Protection contre la fraude
+- Effet d'avalanche
+- Consommation énergétique
 
 ## 🤝 Contribution
 
@@ -70,4 +92,4 @@ Ce projet est sous licence MIT. Voir le fichier `LICENSE` pour plus de détails.
 
 ## 👥 Auteur
 
-Votre Nom - [@votre-username](https://github.com/votre-username)
+Ali Bougassaa - [@Ali-Bougassaa](https://github.com/Ali-Bougassaa)
