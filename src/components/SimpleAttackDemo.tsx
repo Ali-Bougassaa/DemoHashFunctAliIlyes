@@ -94,30 +94,34 @@ const SimpleAttackDemo: React.FC = () => {
 
     setTimeout(() => {
       // Montrer la tentative de modification
-      const newTransactions = [...transactions];
-      const originalAmount = newTransactions[selectedTransaction].amount;
-      newTransactions[selectedTransaction].amount = parseInt(modifiedAmount);
-      setTransactions(newTransactions);
+      const updatedTransactions = [...transactions];
+      const targetTransaction = updatedTransactions[selectedTransaction];
+      const originalHash = targetTransaction.hash;
+      
+      // Modification de la transaction
+      targetTransaction.amount = parseFloat(modifiedAmount);
+      const newHash = simpleHash(JSON.stringify({
+        id: targetTransaction.id,
+        from: targetTransaction.from,
+        to: targetTransaction.to,
+        amount: targetTransaction.amount,
+        timestamp: targetTransaction.timestamp
+      }));
+
       setCurrentStep(2);
 
       setTimeout(() => {
-        // Montrer la détection
-        setCurrentStep(3);
-        setAttackResult(`
-          Tentative de Fraude Détectée !
-          Eve a essayé de modifier la transaction :
-          - Montant original : ${originalAmount}€
-          - Montant frauduleux : ${modifiedAmount}€
-          Le système a rejeté la modification car le hash ne correspond plus !
-        `);
+        // Vérification du hash
+        if (newHash !== originalHash) {
+          setAttackResult("Attaque détectée ! Le hash ne correspond pas à l'original.");
+          targetTransaction.amount = transactions[selectedTransaction].amount;
+          setCurrentStep(3);
+        } else {
+          setAttackResult("L'attaque a réussi (ce qui ne devrait pas arriver en réalité).");
+        }
 
-        // Restaurer l'état original
-        setTimeout(() => {
-          newTransactions[selectedTransaction].amount = originalAmount;
-          setTransactions(newTransactions);
-          setIsAttacking(false);
-          setCurrentStep(0);
-        }, 3000);
+        setTransactions(updatedTransactions);
+        setIsAttacking(false);
       }, 2000);
     }, 2000);
   };
@@ -125,109 +129,94 @@ const SimpleAttackDemo: React.FC = () => {
   return (
     <div className="p-6 bg-gray-900 text-white">
       <h2 className="text-2xl font-bold mb-6">Simulation d'Attaque Interactive</h2>
-
-      {/* Personnages */}
-      <div className="grid grid-cols-2 gap-4 mb-6">
-        {characters.map((character) => (
-          <div
-            key={character.name}
-            className={`p-4 rounded ${
-              character.role === 'attacker' ? 'bg-red-900' : 'bg-blue-900'
-            }`}
-          >
-            <div className="flex items-center gap-3">
-              <span className="text-4xl">{character.avatar}</span>
-              <div>
-                <h3 className="text-xl font-bold">{character.name}</h3>
-                <p>Balance: {character.balance}€</p>
-                <p className="text-sm">
-                  {character.role === 'attacker' ? 'Attaquante' : 'Utilisatrice honnête'}
-                </p>
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
-
-      {/* Étapes de la simulation */}
-      <div className="mb-6">
-        <h3 className="text-xl mb-4">Progression de la Simulation</h3>
-        <div className="grid grid-cols-4 gap-2">
+      
+      {/* Progression des étapes */}
+      <div className="mb-8">
+        <div className="flex justify-between mb-4">
           {steps.map((step, index) => (
             <div
               key={index}
-              className={`p-3 rounded ${
-                currentStep === index ? 'bg-blue-600' : 'bg-gray-800'
+              className={`flex-1 text-center ${
+                index <= currentStep ? 'text-green-500' : 'text-gray-500'
               }`}
             >
-              <h4 className="font-bold">{step.title}</h4>
-              <p className="text-sm">{step.description}</p>
+              <div className="text-sm font-semibold">{step.title}</div>
+              <div className="text-xs mt-1">{step.description}</div>
             </div>
           ))}
         </div>
+        <div className="h-2 bg-gray-700 rounded-full">
+          <div
+            className="h-full bg-green-500 rounded-full transition-all duration-500"
+            style={{ width: `${(currentStep + 1) * 25}%` }}
+          />
+        </div>
       </div>
 
-      {/* Transactions */}
-      <div className="mb-6">
-        <h3 className="text-xl mb-4">Transactions dans la Blockchain</h3>
-        <div className="grid gap-4">
-          {transactions.map((tx, index) => (
-            <div
-              key={tx.id}
-              className={`p-4 rounded cursor-pointer ${
-                selectedTransaction === index 
-                  ? 'bg-red-900' 
-                  : 'bg-gray-800 hover:bg-gray-700'
-              }`}
-              onClick={() => setSelectedTransaction(index)}
-            >
-              <div className="flex justify-between items-center">
-                <div>
-                  <p>De: {tx.from} À: {tx.to}</p>
-                  <p className="text-2xl font-bold">{tx.amount}€</p>
-                  <p className="text-sm">Heure: {tx.timestamp}</p>
+      {/* Liste des transactions */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div>
+          <h3 className="text-xl font-semibold mb-4">Transactions</h3>
+          <div className="space-y-4">
+            {transactions.map((tx, index) => (
+              <div
+                key={tx.id}
+                className={`p-4 rounded-lg ${
+                  selectedTransaction === index
+                    ? 'bg-blue-900 border-2 border-blue-500'
+                    : 'bg-gray-800'
+                }`}
+                onClick={() => setSelectedTransaction(index)}
+              >
+                <div className="flex justify-between items-center">
+                  <span>
+                    {tx.from} → {tx.to}
+                  </span>
+                  <span className="font-mono">{tx.amount}€</span>
                 </div>
-                <div className="text-sm">
-                  <p>Hash: {tx.hash}</p>
+                <div className="text-xs text-gray-400 mt-2">
+                  Hash: {tx.hash}
                 </div>
               </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Panneau d'attaque */}
+        <div>
+          <h3 className="text-xl font-semibold mb-4">Panneau d'Attaque</h3>
+          <div className="p-4 bg-gray-800 rounded-lg">
+            <div className="mb-4">
+              <label className="block text-sm font-medium mb-2">
+                Nouveau montant:
+              </label>
+              <input
+                type="number"
+                value={modifiedAmount}
+                onChange={(e) => setModifiedAmount(e.target.value)}
+                className="w-full p-2 bg-gray-700 rounded"
+                disabled={isAttacking}
+              />
             </div>
-          ))}
+            <button
+              onClick={attemptAttack}
+              disabled={selectedTransaction === null || !modifiedAmount || isAttacking}
+              className={`w-full p-2 rounded ${
+                isAttacking
+                  ? 'bg-gray-600'
+                  : 'bg-red-600 hover:bg-red-700'
+              }`}
+            >
+              {isAttacking ? 'Tentative en cours...' : 'Tenter une Modification'}
+            </button>
+            {attackResult && (
+              <div className="mt-4 p-3 bg-gray-700 rounded">
+                {attackResult}
+              </div>
+            )}
+          </div>
         </div>
       </div>
-
-      {/* Interface d'attaque */}
-      {selectedTransaction !== null && (
-        <div className="mb-6">
-          <h3 className="text-xl mb-4">Tentative de Modification (Eve)</h3>
-          <input
-            type="number"
-            value={modifiedAmount}
-            onChange={(e) => setModifiedAmount(e.target.value)}
-            placeholder="Nouveau montant..."
-            className="w-full p-2 mb-4 bg-gray-800 rounded"
-          />
-          <button
-            onClick={attemptAttack}
-            disabled={isAttacking}
-            className={`w-full p-2 rounded ${
-              isAttacking 
-                ? 'bg-gray-600' 
-                : 'bg-red-600 hover:bg-red-700'
-            }`}
-          >
-            {isAttacking ? 'Tentative en cours...' : 'Modifier la Transaction'}
-          </button>
-        </div>
-      )}
-
-      {/* Résultat */}
-      {attackResult && (
-        <div className="p-4 bg-gray-800 rounded whitespace-pre-line">
-          <h3 className="text-xl mb-2">Résultat de la Tentative :</h3>
-          <p>{attackResult}</p>
-        </div>
-      )}
     </div>
   );
 };

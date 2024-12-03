@@ -239,7 +239,19 @@ const BlockchainHashDemo: React.FC = () => {
       }
     }
     
-    return {
+    return {Simule une tentative de dépenser les mêmes coins deux fois :
+    
+    A. Fonctionnement :
+       1. L'attaquant tente de créer une transaction double
+       2. Le système :
+          - Détecte la tentative
+          - Compare avec l'historique
+          - Rejette la transaction
+    
+    B. Protection :
+       - Vérification des transactions
+       - Consensus du réseau
+       - Historique immuable
       valid: true,
       message: 'Blockchain is valid'
     };

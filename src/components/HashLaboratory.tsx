@@ -1,90 +1,94 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
 
-interface HashComparisonProps {
-  originalText: string;
-  sha256Hash: string;
-  md5Hash: string;
-  weakHash: string;
+interface HashResult {
+  input: string;
+  sha256: string;
+  md5: string;
+  weak: string;
 }
 
 const HashLaboratory: React.FC = () => {
-  const [inputText, setInputText] = useState('');
-  const [hashResults, setHashResults] = useState<HashComparisonProps>({
-    originalText: '',
-    sha256Hash: '',
-    md5Hash: '',
-    weakHash: ''
-  });
+  const [input, setInput] = useState<string>('');
+  const [hashResults, setHashResults] = useState<HashResult[]>([]);
+  const [selectedHash, setSelectedHash] = useState<HashResult | null>(null);
+  const [showAvalanche, setShowAvalanche] = useState<boolean>(false);
   const [animationSpeed, setAnimationSpeed] = useState(1);
-  const [showDifferences, setShowDifferences] = useState(false);
 
   // Fonction de hachage faible pour démonstration
-  const weakHashFunction = (text: string): string => {
+  const weakHash = (input: string): string => {
     let hash = 0;
-    for (let i = 0; i < text.length; i++) {
-      hash = ((hash << 5) - hash) + text.charCodeAt(i);
+    for (let i = 0; i < input.length; i++) {
+      hash = ((hash << 5) - hash) + input.charCodeAt(i);
       hash = hash & hash;
     }
-    return hash.toString(16);
+    return Math.abs(hash).toString(16);
   };
 
   // Fonction SHA-256
-  const sha256 = async (text: string): Promise<string> => {
-    const msgBuffer = new TextEncoder().encode(text);
+  const sha256 = async (input: string): Promise<string> => {
+    const msgBuffer = new TextEncoder().encode(input);
     const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
     const hashArray = Array.from(new Uint8Array(hashBuffer));
     return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
   };
 
   // Fonction MD5 (simulée pour démonstration)
-  const md5 = (text: string): string => {
+  const md5 = (input: string): string => {
     // Simulation simple de MD5 pour démonstration
-    return text.split('').reduce((acc, char) => {
+    return input.split('').reduce((acc, char) => {
       return acc + char.charCodeAt(0).toString(16);
     }, '').slice(0, 32);
   };
 
-  const updateHashes = useCallback(async (text: string) => {
+  const calculateHashes = async (text: string) => {
     const sha256Result = await sha256(text);
     const md5Result = md5(text);
-    const weakResult = weakHashFunction(text);
+    const weakResult = weakHash(text);
 
-    setHashResults({
-      originalText: text,
-      sha256Hash: sha256Result,
-      md5Hash: md5Result,
-      weakHash: weakResult
-    });
-  }, []);
+    const newHashResult: HashResult = {
+      input: text,
+      sha256: sha256Result,
+      md5: md5Result,
+      weak: weakResult
+    };
 
-  useEffect(() => {
-    updateHashes(inputText);
-  }, [inputText, updateHashes]);
+    setHashResults(prev => [...prev, newHashResult]);
+    setSelectedHash(newHashResult);
+  };
 
-  const HashVisualizer: React.FC<{ hash: string, label: string }> = ({ hash, label }) => (
+  const demonstrateAvalanche = async () => {
+    setShowAvalanche(true);
+    const originalInput = input;
+    const modifiedInput = originalInput + '.';
+
+    await calculateHashes(originalInput);
+    await calculateHashes(modifiedInput);
+  };
+
+  const HashVisualizer: React.FC<{ result: HashResult }> = ({ result }) => (
     <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
       className="p-4 bg-gray-800 rounded-lg mb-4"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: 0.5 }}
     >
-      <h3 className="text-lg font-bold mb-2 text-white">{label}</h3>
-      <div className="flex flex-wrap gap-1">
-        {hash.split('').map((char, index) => (
-          <motion.span
-            key={index}
-            className="inline-block w-8 h-8 flex items-center justify-center rounded"
-            style={{
-              backgroundColor: `hsl(${(parseInt(char, 16) * 22.5) % 360}, 70%, 50%)`,
-            }}
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            transition={{ delay: index * 0.01 * animationSpeed }}
-          >
-            {char}
-          </motion.span>
-        ))}
+      <div className="space-y-2">
+        <div>
+          <span className="text-gray-400">Entrée:</span>
+          <span className="ml-2 font-mono">{result.input}</span>
+        </div>
+        <div>
+          <span className="text-gray-400">SHA-256:</span>
+          <span className="ml-2 font-mono text-green-500">{result.sha256}</span>
+        </div>
+        <div>
+          <span className="text-gray-400">MD5:</span>
+          <span className="ml-2 font-mono text-yellow-500">{result.md5}</span>
+        </div>
+        <div>
+          <span className="text-gray-400">Hash Faible:</span>
+          <span className="ml-2 font-mono text-red-500">{result.weak}</span>
+        </div>
       </div>
     </motion.div>
   );
@@ -92,43 +96,74 @@ const HashLaboratory: React.FC = () => {
   return (
     <div className="p-6 bg-gray-900 text-white">
       <h2 className="text-2xl font-bold mb-6">Laboratoire de Hachage</h2>
-      
-      <div className="mb-6">
-        <label className="block mb-2">Texte à hacher :</label>
-        <input
-          type="text"
-          value={inputText}
-          onChange={(e) => setInputText(e.target.value)}
-          className="w-full p-2 bg-gray-800 rounded text-white"
-          placeholder="Entrez du texte..."
-        />
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div>
+          <h3 className="text-xl font-semibold mb-4">Zone de Test</h3>
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium mb-2">
+                Texte à hacher
+              </label>
+              <input
+                type="text"
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                className="w-full p-2 bg-gray-800 rounded"
+                placeholder="Entrez du texte..."
+              />
+            </div>
+
+            <div className="flex space-x-4">
+              <button
+                onClick={() => calculateHashes(input)}
+                className="flex-1 p-2 bg-blue-600 hover:bg-blue-700 rounded"
+              >
+                Calculer les Hashs
+              </button>
+              <button
+                onClick={demonstrateAvalanche}
+                className="flex-1 p-2 bg-purple-600 hover:bg-purple-700 rounded"
+              >
+                Effet Avalanche
+              </button>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-2">
+                Vitesse d'Animation
+              </label>
+              <input
+                type="range"
+                min="0.5"
+                max="2"
+                step="0.1"
+                value={animationSpeed}
+                onChange={(e) => setAnimationSpeed(parseFloat(e.target.value))}
+                className="w-full"
+              />
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <h3 className="text-xl font-semibold mb-4">Résultats</h3>
+          <div className="space-y-4">
+            {hashResults.map((result, index) => (
+              <HashVisualizer key={index} result={result} />
+            ))}
+          </div>
+        </div>
       </div>
 
-      <div className="mb-6">
-        <label className="block mb-2">Vitesse d'animation :</label>
-        <input
-          type="range"
-          min="0.1"
-          max="2"
-          step="0.1"
-          value={animationSpeed}
-          onChange={(e) => setAnimationSpeed(parseFloat(e.target.value))}
-          className="w-full"
-        />
-      </div>
-
-      <div className="space-y-4">
-        <HashVisualizer hash={hashResults.sha256Hash} label="SHA-256" />
-        <HashVisualizer hash={hashResults.md5Hash} label="MD5" />
-        <HashVisualizer hash={hashResults.weakHash} label="Fonction Faible" />
-      </div>
-
-      <button
-        onClick={() => setShowDifferences(!showDifferences)}
-        className="mt-4 px-4 py-2 bg-blue-600 rounded hover:bg-blue-700"
-      >
-        {showDifferences ? "Masquer" : "Montrer"} les différences
-      </button>
+      {showAvalanche && (
+        <div className="mt-6">
+          <h3 className="text-xl font-semibold mb-4">Analyse de l'Effet Avalanche</h3>
+          <p className="text-gray-400 mb-4">
+            Observez comment un petit changement dans l'entrée produit des hashs complètement différents.
+          </p>
+        </div>
+      )}
     </div>
   );
 };

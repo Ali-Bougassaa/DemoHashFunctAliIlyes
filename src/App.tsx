@@ -39,7 +39,7 @@ const App: React.FC = () => {
             onClick={() => setActiveTab('analytics')}
             className={`px-4 py-2 rounded ${activeTab === 'analytics' ? 'bg-green-600' : 'bg-gray-700'}`}
           >
-            Analyse de Sécurité
+            Analyses de Sécurité
           </button>
         </div>
       </nav>
